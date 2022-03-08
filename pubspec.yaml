@@ -29,7 +29,7 @@ dependencies:
   dartz: ^0.10.1
   # Remote API
   data_connection_checker_nulls: ^0.0.2
-#  http: ^0.13.4
+  http: ^0.13.4
   # Local cache
   shared_preferences: ^2.0.13
   plugin_platform_interface: ^2.1.2
