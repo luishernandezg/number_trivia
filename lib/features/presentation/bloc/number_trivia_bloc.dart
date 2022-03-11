@@ -41,6 +41,12 @@ class NumberTriviaBloc extends Bloc<NumberTriviaEvent, NumberTriviaState> {
     on<GetTriviaForRandomNumber>(_onGetTriviaForRandomNumber);
   }
 
+  @override
+  void onChange(Change<NumberTriviaState> change) {
+    super.onChange(change);
+    print(change);
+  }
+
   void _onGetTriviaForConcreteNumber(
       GetTriviaForConcreteNumber event, Emitter<NumberTriviaState> emit) async {
     final inputEither =
