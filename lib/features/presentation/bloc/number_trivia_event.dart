@@ -5,15 +5,22 @@ abstract class NumberTriviaEvent extends Equatable {
 }
 
 class GetTriviaForConcreteNumber extends NumberTriviaEvent {
-  final String numberString;
-
-  GetTriviaForConcreteNumber(this.numberString);
+  const GetTriviaForConcreteNumber();
 
   @override
-  List<Object?> get props => [numberString];
+  List<Object?> get props => [];
 }
 
 class GetTriviaForRandomNumber extends NumberTriviaEvent {
   @override
   List<Object?> get props => [];
+}
+
+class InputNumberChanged extends NumberTriviaEvent {
+  const InputNumberChanged(this.number);
+
+  final String number;
+
+  @override
+  List<Object> get props => [number];
 }

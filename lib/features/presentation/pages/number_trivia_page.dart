@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:formz/formz.dart';
 import 'package:number_trivia/injection_container.dart';
 import '../bloc/number_trivia_bloc.dart';
 import '../widgets/loading_widget.dart';
@@ -29,17 +30,17 @@ class NumberTriviaPage extends StatelessWidget {
               // Top half
               BlocBuilder<NumberTriviaBloc, NumberTriviaState>(
                 builder: (context, state) {
-                  if (state is Empty) {
-                    return MessageDisplay(
+                  if (state.status == FormzStatus.pure) {
+                    return const MessageDisplay(
                       message: 'Start searching!',
                     );
-                  } else if (state is Loading) {
-                    return LoadingWidget();
-                  } else if (state is Loaded) {
+                  } else if (state.status == FormzStatus.submissionInProgress) {
+                    return const LoadingWidget();
+                  } else if (state.status == FormzStatus.submissionSuccess) {
                     return TriviaDisplay(
-                      numberTrivia: state.trivia,
+                      numberTrivia: state.trivia!,
                     );
-                  } else if (state is Error) {
+                  } else if (state.status == FormzStatus.submissionFailure) {
                     return MessageDisplay(
                       message: state.message,
                     );
@@ -50,7 +51,7 @@ class NumberTriviaPage extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               // Bottom half
-              TriviaControls()
+              const TriviaControls()
             ],
           ),
         ),

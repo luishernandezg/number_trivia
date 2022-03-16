@@ -1,9 +1,9 @@
-import 'dart:async';
-
 import 'package:bloc/bloc.dart';
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
+import 'package:formz/formz.dart';
 import 'package:number_trivia/core/usecases/usecase.dart';
+import 'package:number_trivia/features/presentation/input_fields/input_number_trivia.dart';
 
 import '../../../core/error/failure.dart';
 import '../../../core/util/input_converter.dart';
@@ -30,15 +30,12 @@ class NumberTriviaBloc extends Bloc<NumberTriviaEvent, NumberTriviaState> {
       required this.inputConverter})
       : getConcreteNumberTrivia = concrete,
         getRandomNumberTrivia = random,
-        super(Empty()) {
-    on<NumberTriviaEvent>((event, emit) {
-      emit(Empty());
-      // TODO: implement event handler
-    });
-
+        super(const NumberTriviaState()) {
     on<GetTriviaForConcreteNumber>(_onGetTriviaForConcreteNumber);
 
     on<GetTriviaForRandomNumber>(_onGetTriviaForRandomNumber);
+
+    on<InputNumberChanged>(_onInputNumberChanged);
   }
 
   @override
@@ -47,30 +44,53 @@ class NumberTriviaBloc extends Bloc<NumberTriviaEvent, NumberTriviaState> {
     print(change);
   }
 
+  @override
+  void onTransition(
+      Transition<NumberTriviaEvent, NumberTriviaState> transition) {
+    super.onTransition(transition);
+    print(transition);
+  }
+
+  void _onInputNumberChanged(
+      InputNumberChanged event, Emitter<NumberTriviaState> emit) async {
+    final inputNumberTrivia = InputNumberTrivia.dirty(event.number);
+
+    emit(state.copyWith(
+      inputNumberTrivia: inputNumberTrivia,
+      status: Formz.validate([inputNumberTrivia]),
+    ));
+  }
+
   void _onGetTriviaForConcreteNumber(
       GetTriviaForConcreteNumber event, Emitter<NumberTriviaState> emit) async {
-    final inputEither =
-        inputConverter.stringToUnsignedInteger(event.numberString);
+    if (state.status.isValidated) {
+      final inputEither =
+          inputConverter.stringToUnsignedInteger(state.inputNumberTrivia.value);
 
-    await inputEither.fold(
-      (failure) {
-        emit(Error(message: INVALID_INPUT_FAILURE_MESSAGE));
-      },
-      // Although the "success case" doesn't interest us with the current test,
-      // we still have to handle it somehow.
-      (integer) async {
-        emit(Loading());
-        final failureOrTrivia =
-            await getConcreteNumberTrivia(Params(number: integer));
-        // final failureOrTrivia = await getRandomNumberTrivia(NoParams());
-        emit(_eitherLoadedOrErrorState(failureOrTrivia));
-      },
-    );
+      await inputEither.fold(
+        (failure) {
+          emit(
+            state.copyWith(
+                status: FormzStatus.submissionFailure,
+                message: INVALID_INPUT_FAILURE_MESSAGE),
+          );
+        },
+        // Although the "success case" doesn't interest us with the current test,
+        // we still have to handle it somehow.
+        (integer) async {
+          emit(state.copyWith(status: FormzStatus.submissionInProgress));
+          final failureOrTrivia =
+              await getConcreteNumberTrivia(Params(number: integer));
+          // final failureOrTrivia = await getRandomNumberTrivia(NoParams());
+          emit(_eitherLoadedOrErrorState(failureOrTrivia));
+        },
+      );
+    }
   }
 
   void _onGetTriviaForRandomNumber(
       GetTriviaForRandomNumber event, Emitter<NumberTriviaState> emit) async {
-    emit(Loading());
+    emit(state.copyWith(status: FormzStatus.submissionInProgress));
     final failureOrTrivia = await getRandomNumberTrivia(NoParams());
     // emit.isDone;
     emit(_eitherLoadedOrErrorState(failureOrTrivia));
@@ -79,8 +99,15 @@ class NumberTriviaBloc extends Bloc<NumberTriviaEvent, NumberTriviaState> {
   NumberTriviaState _eitherLoadedOrErrorState(
       Either<Failure, NumberTrivia> failureOrTrivia) {
     return failureOrTrivia.fold(
-      (failure) => Error(message: _mapFailureToMessage(failure)),
-      (trivia) => Loaded(trivia: trivia),
+      (failure) => state.copyWith(
+        status: FormzStatus.submissionFailure,
+        message: _mapFailureToMessage(failure),
+      ),
+      (trivia) => state.copyWith(
+        status: FormzStatus.submissionSuccess,
+        inputNumberTrivia: const InputNumberTrivia.pure(),
+        trivia: trivia,
+      ),
     );
   }
 }

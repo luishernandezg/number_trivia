@@ -25,6 +25,8 @@ dependencies:
   flutter_bloc: ^8.0.1
   # Value equality
   equatable: ^2.0.3
+  # Form status and validation
+  formz: ^0.4.0
   # Functional programming thingies
   dartz: ^0.10.1
   # Remote API
