@@ -2,13 +2,13 @@ part of 'number_trivia_bloc.dart';
 
 class NumberTriviaState extends Equatable {
   final FormzStatus status;
-  final InputNumberTrivia inputNumberTrivia;
+  final InputNumberTrivia inputNumber;
   final String message;
   final NumberTrivia? trivia;
 
   const NumberTriviaState({
     this.status = FormzStatus.pure,
-    this.inputNumberTrivia = const InputNumberTrivia.pure(),
+    this.inputNumber = const InputNumberTrivia.pure(),
     this.message = '',
     this.trivia,
   });
@@ -21,7 +21,7 @@ class NumberTriviaState extends Equatable {
   }) {
     return NumberTriviaState(
       status: status ?? this.status,
-      inputNumberTrivia: inputNumberTrivia ?? this.inputNumberTrivia,
+      inputNumber: inputNumberTrivia ?? this.inputNumber,
       message: message ?? this.message,
       trivia: trivia ?? this.trivia,
     );
@@ -29,5 +29,5 @@ class NumberTriviaState extends Equatable {
 
   @override
   // TODO: implement props
-  List<Object?> get props => [status, inputNumberTrivia, message, trivia];
+  List<Object?> get props => [status, inputNumber, message, trivia];
 }

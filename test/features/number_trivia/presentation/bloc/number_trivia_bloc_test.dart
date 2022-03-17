@@ -10,6 +10,8 @@ import 'package:number_trivia/features/domain/entities/number_trivia.dart';
 import 'package:number_trivia/features/domain/usecases/get_concrete_number_trivia.dart';
 import 'package:number_trivia/features/domain/usecases/get_random_number_trivia.dart';
 import 'package:number_trivia/features/presentation/bloc/number_trivia_bloc.dart';
+import 'package:number_trivia/features/presentation/input_fields/input_number_trivia.dart';
+import 'package:bloc_test/bloc_test.dart';
 
 import 'number_trivia_bloc_test.mocks.dart';
 
@@ -56,15 +58,50 @@ void main() {
 
   group('GetTriviaForConcreteNumber', () {
     // The event takes in a String
-    final tNumberString = '1';
+    const tNumberString = '1';
     // This is the successful output of the InputConverter
     final tNumberParsed = int.parse(tNumberString);
     // NumberTrivia instance is needed too, of course
-    final tNumberTrivia = NumberTrivia(number: 1, text: 'test trivia');
+    const tNumberTrivia = NumberTrivia(number: 1, text: 'test trivia');
 
     void setUpMockInputConverterSuccess() =>
         when(mockInputConverter.stringToUnsignedInteger(any))
             .thenReturn(Right(tNumberParsed));
+
+    test(
+      'should call the status.inputNumber.value to get input string for the conversion',
+      () async {
+        // arrange
+        setUpMockInputConverterSuccess();
+        when(mockGetConcreteNumberTrivia(any))
+            .thenAnswer((_) async => const Right(tNumberTrivia));
+        // act
+        bloc.add(const GetTriviaForConcreteNumber());
+        await untilCalled(mockInputConverter.stringToUnsignedInteger(any));
+        // assert
+        verify(mockInputConverter
+            .stringToUnsignedInteger(bloc.state.inputNumber.value));
+      },
+    );
+
+    /*blocTest('emits [MyState] when MyEvent is added',
+        build: () {
+          setUpMockInputConverterSuccess();
+          when(mockGetConcreteNumberTrivia(any))
+              .thenAnswer((_) async => Right(tNumberTrivia));
+          return NumberTriviaBloc(
+            concrete: mockGetConcreteNumberTrivia,
+            random: mockGetRandomNumberTrivia,
+            inputConverter: mockInputConverter,
+          );
+        },
+        act: (NumberTriviaBloc tbloc) =>
+            tbloc.add(const GetTriviaForConcreteNumber()),
+        // expect: () => [isA<MyState>()],
+        verify: (_) {
+          verify(() => mockInputConverter
+              .stringToUnsignedInteger(bloc.state.inputNumber.value));
+        });*/
 
     test(
       'should call the InputConverter to validate and convert the string to an unsigned integer',
@@ -72,25 +109,24 @@ void main() {
         // arrange
         setUpMockInputConverterSuccess();
         when(mockGetConcreteNumberTrivia(any))
-            .thenAnswer((_) async => Right(tNumberTrivia));
+            .thenAnswer((_) async => const Right(tNumberTrivia));
         // act
         bloc.add(const GetTriviaForConcreteNumber());
         await untilCalled(mockInputConverter.stringToUnsignedInteger(any));
         // assert
-        verify(mockInputConverter.stringToUnsignedInteger(tNumberString));
+        verify(mockInputConverter
+            .stringToUnsignedInteger(bloc.state.inputNumber.value));
       },
     );
 
     test(
-      'should emit [Error] when the input is invalid',
+      'should emit [status.submissionFailure] when the input is invalid',
       () async {
         // arrange
         when(mockInputConverter.stringToUnsignedInteger(any))
             .thenReturn(Left(InvalidInputFailure()));
         // assert later
         final expected = [
-          // The initial state is always emitted first
-          const NumberTriviaState(),
           const NumberTriviaState(
             status: FormzStatus.submissionFailure,
             message: INVALID_INPUT_FAILURE_MESSAGE,
@@ -108,7 +144,7 @@ void main() {
         // arrange
         setUpMockInputConverterSuccess();
         when(mockGetConcreteNumberTrivia(any))
-            .thenAnswer((_) async => Right(tNumberTrivia));
+            .thenAnswer((_) async => const Right(tNumberTrivia));
         // act
         bloc.add(const GetTriviaForConcreteNumber());
         await untilCalled(mockGetConcreteNumberTrivia(any));
@@ -118,19 +154,22 @@ void main() {
     );
 
     test(
-      'should emit [Loading, Loaded] when data is gotten successfully',
+      'should emit [status = submissionInProgress , status = submissionSuccess] when data is gotten successfully',
       () async {
         // arrange
         setUpMockInputConverterSuccess();
         when(mockGetConcreteNumberTrivia(any))
-            .thenAnswer((_) async => Right(tNumberTrivia));
+            .thenAnswer((_) async => const Right(tNumberTrivia));
         // assert later
         final expected = [
-          // The initial state is always emitted first
-          const NumberTriviaState(),
-          const NumberTriviaState(status: FormzStatus.submissionInProgress),
-          NumberTriviaState(
-              status: FormzStatus.submissionSuccess, trivia: tNumberTrivia)
+          const NumberTriviaState(
+            status: FormzStatus.submissionInProgress,
+            inputNumber: InputNumberTrivia.pure(),
+          ),
+          const NumberTriviaState(
+            status: FormzStatus.submissionSuccess,
+            trivia: tNumberTrivia,
+          )
         ];
         expectLater(bloc.stream, emitsInOrder(expected));
         // act
@@ -138,8 +177,8 @@ void main() {
       },
     );
 
-    /*test(
-      'should emit [Loading, Error] when getting data fails',
+    test(
+      'should emit [status = submissionInProgress , status = submissionFailure] when getting data fails',
       () async {
         // arrange
         setUpMockInputConverterSuccess();
@@ -147,18 +186,23 @@ void main() {
             .thenAnswer((_) async => Left(ServerFailure()));
         // assert later
         final expected = [
-          Empty(),
-          Loading(),
-          Error(message: SERVER_FAILURE_MESSAGE),
+          const NumberTriviaState(
+            status: FormzStatus.submissionInProgress,
+            inputNumber: InputNumberTrivia.pure(),
+          ),
+          const NumberTriviaState(
+            status: FormzStatus.submissionFailure,
+            message: SERVER_FAILURE_MESSAGE,
+          ),
         ];
         expectLater(bloc.stream, emitsInOrder(expected));
         // act
-        bloc.add(GetTriviaForConcreteNumber(tNumberString));
+        bloc.add(const GetTriviaForConcreteNumber());
       },
-    );*/
+    );
 
-    /*test(
-      'should emit [Loading, Error] with a proper message for the error when getting data fails',
+    test(
+      'should emit [status = submissionInProgress , status = submissionFailure] with a proper message for the error when getting data fails',
       () async {
         // arrange
         setUpMockInputConverterSuccess();
@@ -166,18 +210,23 @@ void main() {
             .thenAnswer((_) async => Left(CacheFailure()));
         // assert later
         final expected = [
-          Empty(),
-          Loading(),
-          Error(message: CACHE_FAILURE_MESSAGE),
+          const NumberTriviaState(
+            status: FormzStatus.submissionInProgress,
+            inputNumber: InputNumberTrivia.pure(),
+          ),
+          const NumberTriviaState(
+            status: FormzStatus.submissionFailure,
+            message: CACHE_FAILURE_MESSAGE,
+          ),
         ];
         expectLater(bloc.stream, emitsInOrder(expected));
         // act
-        bloc.add(GetTriviaForConcreteNumber(tNumberString));
+        bloc.add(const GetTriviaForConcreteNumber());
       },
-    );*/
+    );
   });
 
-  /*group('GetTriviaForRandomNumber', () {
+  group('GetTriviaForRandomNumber', () {
     const tNumberTrivia = NumberTrivia(number: 1, text: 'test trivia');
 
     test(
@@ -195,16 +244,21 @@ void main() {
     );
 
     test(
-      'should emit [Loading, Loaded] when data is gotten successfully',
+      'should emit [status = submissionInProgress , status = submissionSuccess] when data is gotten successfully',
       () async {
         // arrange
         when(mockGetRandomNumberTrivia(any))
             .thenAnswer((_) async => const Right(tNumberTrivia));
         // assert later
         final expected = [
-          Empty(),
-          Loading(),
-          Loaded(trivia: tNumberTrivia),
+          const NumberTriviaState(
+            status: FormzStatus.submissionInProgress,
+            inputNumber: InputNumberTrivia.pure(),
+          ),
+          const NumberTriviaState(
+            status: FormzStatus.submissionSuccess,
+            trivia: tNumberTrivia,
+          )
         ];
         expectLater(bloc.stream, emitsInOrder(expected));
         // act
@@ -213,16 +267,21 @@ void main() {
     );
 
     test(
-      'should emit [Loading, Error] when getting data fails',
+      'should emit [status = submissionInProgress , status = submissionFailure] when getting data fails',
       () async {
         // arrange
         when(mockGetRandomNumberTrivia(any))
             .thenAnswer((_) async => Left(ServerFailure()));
         // assert later
         final expected = [
-          Empty(),
-          Loading(),
-          Error(message: SERVER_FAILURE_MESSAGE),
+          const NumberTriviaState(
+            status: FormzStatus.submissionInProgress,
+            inputNumber: InputNumberTrivia.pure(),
+          ),
+          const NumberTriviaState(
+            status: FormzStatus.submissionFailure,
+            message: SERVER_FAILURE_MESSAGE,
+          ),
         ];
         expectLater(bloc.stream, emitsInOrder(expected));
         // act
@@ -231,21 +290,26 @@ void main() {
     );
 
     test(
-      'should emit [Loading, Error] with a proper message for the error when getting data fails',
+      'should emit [status = submissionInProgress , status = submissionFailure] with a proper message for the error when getting data fails',
       () async {
         // arrange
         when(mockGetRandomNumberTrivia(any))
             .thenAnswer((_) async => Left(CacheFailure()));
         // assert later
         final expected = [
-          Empty(),
-          Loading(),
-          Error(message: CACHE_FAILURE_MESSAGE),
+          const NumberTriviaState(
+            status: FormzStatus.submissionInProgress,
+            inputNumber: InputNumberTrivia.pure(),
+          ),
+          const NumberTriviaState(
+            status: FormzStatus.submissionFailure,
+            message: CACHE_FAILURE_MESSAGE,
+          ),
         ];
         expectLater(bloc.stream, emitsInOrder(expected));
         // act
         bloc.add(GetTriviaForRandomNumber());
       },
     );
-  });*/
+  });
 }

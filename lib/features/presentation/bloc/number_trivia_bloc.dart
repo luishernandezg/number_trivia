@@ -63,29 +63,30 @@ class NumberTriviaBloc extends Bloc<NumberTriviaEvent, NumberTriviaState> {
 
   void _onGetTriviaForConcreteNumber(
       GetTriviaForConcreteNumber event, Emitter<NumberTriviaState> emit) async {
-    if (state.status.isValidated) {
-      final inputEither =
-          inputConverter.stringToUnsignedInteger(state.inputNumberTrivia.value);
+    final inputEither =
+        inputConverter.stringToUnsignedInteger(state.inputNumber.value);
 
-      await inputEither.fold(
-        (failure) {
-          emit(
-            state.copyWith(
-                status: FormzStatus.submissionFailure,
-                message: INVALID_INPUT_FAILURE_MESSAGE),
-          );
-        },
-        // Although the "success case" doesn't interest us with the current test,
-        // we still have to handle it somehow.
-        (integer) async {
-          emit(state.copyWith(status: FormzStatus.submissionInProgress));
-          final failureOrTrivia =
-              await getConcreteNumberTrivia(Params(number: integer));
-          // final failureOrTrivia = await getRandomNumberTrivia(NoParams());
-          emit(_eitherLoadedOrErrorState(failureOrTrivia));
-        },
-      );
-    }
+    await inputEither.fold(
+      (failure) {
+        emit(state.copyWith(
+          status: FormzStatus.submissionFailure,
+          inputNumberTrivia: const InputNumberTrivia.pure(),
+          message: INVALID_INPUT_FAILURE_MESSAGE,
+        ));
+      },
+      // Although the "success case" doesn't interest us with the current test,
+      // we still have to handle it somehow.
+      (integer) async {
+        emit(state.copyWith(
+          status: FormzStatus.submissionInProgress,
+          inputNumberTrivia: const InputNumberTrivia.pure(),
+        ));
+        final failureOrTrivia =
+            await getConcreteNumberTrivia(Params(number: integer));
+        // final failureOrTrivia = await getRandomNumberTrivia(NoParams());
+        emit(_eitherLoadedOrErrorState(failureOrTrivia));
+      },
+    );
   }
 
   void _onGetTriviaForRandomNumber(
@@ -101,6 +102,7 @@ class NumberTriviaBloc extends Bloc<NumberTriviaEvent, NumberTriviaState> {
     return failureOrTrivia.fold(
       (failure) => state.copyWith(
         status: FormzStatus.submissionFailure,
+        inputNumberTrivia: const InputNumberTrivia.pure(),
         message: _mapFailureToMessage(failure),
       ),
       (trivia) => state.copyWith(

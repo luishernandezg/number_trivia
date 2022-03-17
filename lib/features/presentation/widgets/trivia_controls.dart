@@ -30,18 +30,18 @@ class _TriviaControlsState extends State<TriviaControls> {
                   SnackBar(content: Text(state.message)),
                 );
             }
-            if (state.inputNumberTrivia.pure) {}
+            if (state.inputNumber.pure) {}
           },
           child: BlocBuilder<NumberTriviaBloc, NumberTriviaState>(
               buildWhen: (previous, current) =>
-                  previous.inputNumberTrivia != current.inputNumberTrivia,
+                  previous.inputNumber != current.inputNumber,
               builder: (context, state) {
                 return TextField(
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
                       border: const OutlineInputBorder(),
                       hintText: 'Input a number',
-                      errorText: state.inputNumberTrivia.invalid
+                      errorText: state.inputNumber.invalid
                           ? 'invalid username'
                           : null),
                   controller: controller,
@@ -55,12 +55,25 @@ class _TriviaControlsState extends State<TriviaControls> {
         const SizedBox(height: 10),
         Row(
           children: <Widget>[
-            Expanded(
+            BlocBuilder<NumberTriviaBloc, NumberTriviaState>(
+                buildWhen: (previous, current) =>
+                    previous.inputNumber != current.inputNumber,
+                builder: (context, state) {
+                  return Expanded(
+                    child: ElevatedButton(
+                      child: const Text('Search'),
+                      onPressed: state.status == FormzStatus.valid
+                          ? dispatchConcrete
+                          : null,
+                    ),
+                  );
+                }),
+            /*Expanded(
               child: ElevatedButton(
                 child: const Text('Search'),
                 onPressed: dispatchConcrete,
               ),
-            ),
+            ),*/
             const SizedBox(width: 10),
             Expanded(
               child: ElevatedButton(
@@ -113,20 +126,19 @@ class _NumberInputState extends State<_NumberInput> {
               SnackBar(content: Text(state.message)),
             );
         }
-        if (state.inputNumberTrivia.pure) {}
+        if (state.inputNumber.pure) {}
       },
       child: BlocBuilder<NumberTriviaBloc, NumberTriviaState>(
           buildWhen: (previous, current) =>
-              previous.inputNumberTrivia != current.inputNumberTrivia,
+              previous.inputNumber != current.inputNumber,
           builder: (context, state) {
             return TextField(
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
                   border: const OutlineInputBorder(),
                   hintText: 'Input a number',
-                  errorText: state.inputNumberTrivia.invalid
-                      ? 'invalid username'
-                      : null),
+                  errorText:
+                      state.inputNumber.invalid ? 'invalid username' : null),
               controller: controller,
               onChanged: (value) => context
                   .read<NumberTriviaBloc>()
