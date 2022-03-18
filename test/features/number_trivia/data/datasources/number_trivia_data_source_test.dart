@@ -11,7 +11,7 @@ import '../../../../fixtures/fixture_reader.dart';
 import 'number_trivia_data_source_test.mocks.dart';
 
 // class MockHttpClient extends Mock implements http.Client {}
-
+/*
 @GenerateMocks([http.Client])
 void main() {
   NumberTriviaRemoteDataSourceImpl dataSource;
@@ -39,7 +39,7 @@ void main() {
   group('getConcreteNumberTrivia', () {
     const tNumber = 1;
     final tNumberTriviaModel =
-        NumberTriviaModel.fromJson(json.decode(fixture('trivia.json')));
+        NumberTriviaModel.fromJsonFactory(json.decode(fixture('trivia.json')));
 
     test(
       'should preform a GET request on a URL with number being the endpoint and with application/json header',
@@ -87,7 +87,7 @@ void main() {
 
   group('getRandomNumberTrivia', () {
     final tNumberTriviaModel =
-        NumberTriviaModel.fromJson(json.decode(fixture('trivia.json')));
+        NumberTriviaModel.fromJsonFactory(json.decode(fixture('trivia.json')));
 
     test(
       'should preform a GET request on a URL with *random* endpoint with application/json header',
@@ -132,4 +132,4 @@ void main() {
       },
     );
   });
-}
+}*/

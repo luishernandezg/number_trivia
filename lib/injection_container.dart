@@ -1,5 +1,8 @@
+import 'package:chopper/chopper.dart';
 import 'package:data_connection_checker_nulls/data_connection_checker_nulls.dart';
 import 'package:get_it/get_it.dart';
+import 'package:number_trivia/features/data/chopper/chopper_client.dart';
+import 'package:number_trivia/features/data/chopper/services/number_trivia_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/network/network_info.dart';
@@ -40,8 +43,13 @@ Future<void> init() async {
   );
 
   // Data sources
+
+  sl.registerSingleton<ChopperClient>(ChopperClientBuilder.buildChopperClient(
+    [NumberTriviaService.create()],
+  ));
+
   sl.registerLazySingleton<NumberTriviaRemoteDataSource>(
-    () => NumberTriviaRemoteDataSourceImpl(client: sl()),
+    () => NumberTriviaRemoteDataSourceImpl(client: sl(), chopperClient: sl()),
   );
 
   sl.registerLazySingleton<NumberTriviaLocalDataSource>(
