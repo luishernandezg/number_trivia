@@ -1,39 +1,73 @@
 import 'dart:convert';
-import 'package:mockito/annotations.dart';
-import 'package:mockito/mockito.dart';
+import 'package:chopper/chopper.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:number_trivia/core/chopper/chopper_client.dart';
 import 'package:number_trivia/core/error/exception.dart';
 import 'package:http/http.dart' as http;
+import 'package:number_trivia/features/data/chopper/services/number_trivia_service.dart';
 import 'package:number_trivia/features/data/datasources/number_trivia_data_source.dart';
 import 'package:number_trivia/features/data/models/number_trivia_model.dart';
-
 import '../../../../fixtures/fixture_reader.dart';
-import 'number_trivia_data_source_test.mocks.dart';
+import 'package:http/testing.dart';
 
-// class MockHttpClient extends Mock implements http.Client {}
-/*
-@GenerateMocks([http.Client])
 void main() {
   NumberTriviaRemoteDataSourceImpl dataSource;
   MockClient mockHttpClient;
+  ChopperClient chopperClient;
 
   setUp(() {
-    mockHttpClient = MockClient();
-    dataSource = NumberTriviaRemoteDataSourceImpl(client: mockHttpClient);
+    mockHttpClient = MockClient((request) async {
+      if (request.url.path == "/1") {
+        return http.Response(fixture('trivia.json'), 200);
+      }
+      return http.Response('', 404);
+    });
+    chopperClient = ChopperClientBuilder.buildChopperClient(
+        [NumberTriviaService.create()], mockHttpClient);
+    dataSource = NumberTriviaRemoteDataSourceImpl(chopperClient: chopperClient);
   });
-  mockHttpClient = MockClient();
-  dataSource = NumberTriviaRemoteDataSourceImpl(client: mockHttpClient);
+
+  mockHttpClient = MockClient((request) async {
+    if (request.url.path == "/1") {
+      return http.Response(fixture('trivia.json'), 200);
+    }
+    return http.Response('', 404);
+  });
+  chopperClient = ChopperClientBuilder.buildChopperClient(
+      [NumberTriviaService.create()], mockHttpClient);
+  dataSource = NumberTriviaRemoteDataSourceImpl(chopperClient: chopperClient);
 
   void setUpMockHttpClientSuccess200() {
-    when(mockHttpClient.get(any, headers: anyNamed('headers'))).thenAnswer(
-      (_) async => http.Response(fixture('trivia.json'), 200),
-    );
+    mockHttpClient = MockClient((request) async {
+      return http.Response(fixture('trivia.json'), 200);
+    });
+    chopperClient = ChopperClientBuilder.buildChopperClient(
+        [NumberTriviaService.create()], mockHttpClient);
+    dataSource = NumberTriviaRemoteDataSourceImpl(chopperClient: chopperClient);
+  }
+
+  void setUpMockHttpClientSuccess200When(
+      {required Map<String, String> headers, required Uri url}) {
+    mockHttpClient = MockClient((request) async {
+      if (mapEquals(request.headers, headers) && request.url == url) {
+        return http.Response(fixture('trivia.json'), 200);
+      } else {
+        return http.Response('Something went wrong', 404);
+      }
+    });
+    chopperClient = ChopperClientBuilder.buildChopperClient(
+        [NumberTriviaService.create()], mockHttpClient);
+    dataSource = NumberTriviaRemoteDataSourceImpl(chopperClient: chopperClient);
   }
 
   void setUpMockHttpClientFailure404() {
-    when(mockHttpClient.get(any, headers: anyNamed('headers'))).thenAnswer(
-      (_) async => http.Response('Something went wrong', 404),
-    );
+    mockHttpClient = MockClient((request) async {
+      return http.Response('Something went wrong', 404);
+    });
+    chopperClient = ChopperClientBuilder.buildChopperClient(
+        [NumberTriviaService.create()], mockHttpClient);
+    dataSource = NumberTriviaRemoteDataSourceImpl(chopperClient: chopperClient);
   }
 
   group('getConcreteNumberTrivia', () {
@@ -43,19 +77,18 @@ void main() {
 
     test(
       'should preform a GET request on a URL with number being the endpoint and with application/json header',
-      () {
+      () async {
         //arrange
-        setUpMockHttpClientSuccess200();
-        // act
-        dataSource.getConcreteNumberTrivia(tNumber);
-        // assert
         const String authority = 'numbersapi.com';
         final String path = tNumber.toString();
         var url = Uri.http(authority, path);
-        verify(mockHttpClient.get(
-          url,
-          headers: {'Content-Type': 'application/json'},
-        ));
+
+        setUpMockHttpClientSuccess200When(
+            headers: {'Content-Type': 'application/json'}, url: url);
+        // act
+        final result = await dataSource.getConcreteNumberTrivia(tNumber);
+        // assert
+        expect(result, equals(tNumberTriviaModel));
       },
     );
 
@@ -91,20 +124,18 @@ void main() {
 
     test(
       'should preform a GET request on a URL with *random* endpoint with application/json header',
-      () {
+      () async {
         //arrange
-        setUpMockHttpClientSuccess200();
-        // act
-        dataSource.getRandomNumberTrivia();
-        // assert
         const String authority = 'numbersapi.com';
-        const String path = 'random';
+        const String path = '/random';
         var url = Uri.http(authority, path);
 
-        verify(mockHttpClient.get(
-          url,
-          headers: {'Content-Type': 'application/json'},
-        ));
+        const headers = {'Content-Type': 'application/json'};
+        setUpMockHttpClientSuccess200When(headers: headers, url: url);
+        // act
+        final result = await dataSource.getRandomNumberTrivia();
+        // assert
+        expect(result, equals(tNumberTriviaModel));
       },
     );
 
@@ -132,4 +163,4 @@ void main() {
       },
     );
   });
-}*/
+}

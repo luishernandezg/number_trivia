@@ -1,6 +1,6 @@
 import 'package:chopper/chopper.dart';
 import 'package:flutter/foundation.dart';
-import 'package:number_trivia/features/data/chopper/json_type_parser.dart';
+import 'package:number_trivia/core/chopper/json_type_parser.dart';
 import 'package:number_trivia/features/data/models/error/response_error.dart';
 
 class JsonSerializableConverter extends JsonConverter {

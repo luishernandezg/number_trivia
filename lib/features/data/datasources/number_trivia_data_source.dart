@@ -20,11 +20,9 @@ abstract class NumberTriviaRemoteDataSource {
 }
 
 class NumberTriviaRemoteDataSourceImpl implements NumberTriviaRemoteDataSource {
-  final http.Client client;
   final ChopperClient chopperClient;
 
-  NumberTriviaRemoteDataSourceImpl(
-      {required this.client, required this.chopperClient});
+  NumberTriviaRemoteDataSourceImpl({required this.chopperClient});
 
   @override
   Future<NumberTriviaModel> getConcreteNumberTrivia(int number) async {
@@ -76,7 +74,7 @@ class NumberTriviaRemoteDataSourceImpl implements NumberTriviaRemoteDataSource {
     }*/
   }
 
-  Future<NumberTriviaModel> _getTriviaFromUrl(Uri url) async {
+  /*Future<NumberTriviaModel> _getTriviaFromUrl(Uri url) async {
     final response = await client.get(
       url,
       headers: {'Content-Type': 'application/json'},
@@ -87,5 +85,5 @@ class NumberTriviaRemoteDataSourceImpl implements NumberTriviaRemoteDataSource {
     } else {
       throw ServerException();
     }
-  }
+  }*/
 }
